@@ -52,7 +52,6 @@ public class DataSeeder implements CommandLineRunner {
                 .password(passwordEncoder.encode(DEFAULT_ADMIN_PASSWORD))
                 .role(Role.ADMIN)
                 .status(UserStatus.ACTIVE)
-                .twoFactorEnabled(true)
                 .mustChangePassword(true)
                 .createdAt(Instant.now())
                 .build();

@@ -6,11 +6,12 @@ import com.infobeans.ibnextstep.common.exception.BadRequestException;
 import com.infobeans.ibnextstep.common.exception.ResourceNotFoundException;
 import com.infobeans.ibnextstep.common.util.EmailService;
 import com.infobeans.ibnextstep.notification.dto.ComposeNotificationRequest;
-import com.infobeans.ibnextstep.user.Role;
+
 import com.infobeans.ibnextstep.user.User;
 import com.infobeans.ibnextstep.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,10 @@ public class NotificationService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final AuditLogService auditLogService;
+    private final SimpMessagingTemplate messagingTemplate;
+    // NEW — OS-level browser push, reaches the recipient even if the
+    // app/tab isn't open (as long as they've granted permission once).
+    private final WebPushService webPushService;
 
     public void compose(ComposeNotificationRequest request, String senderRole) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -46,8 +51,22 @@ public class NotificationService {
                     .read(false)
                     .createdAt(Instant.now())
                     .build();
-            notificationRepository.save(notification);
+
+            notification = notificationRepository.save(notification);
             emailService.send(recipient.getEmail(), request.getTitle(), request.getMessage());
+
+            // In-app real-time push — delivered only while the recipient
+            // has the app open in a browser tab.
+            messagingTemplate.convertAndSendToUser(
+                    recipient.getEmail(),
+                    "/queue/notifications",
+                    notification
+            );
+
+            // NEW — OS-level push — delivered even with the app/tab closed,
+            // to every device/browser the recipient has subscribed on.
+            // Silent no-op if they never granted permission.
+            webPushService.sendToUser(recipient.getId(), request.getTitle(), request.getMessage());
         }
 
         auditLogService.log(sender != null ? sender.getId() : null, senderEmail, senderRole,

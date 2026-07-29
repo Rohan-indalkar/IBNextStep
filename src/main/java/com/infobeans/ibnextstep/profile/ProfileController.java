@@ -31,9 +31,4 @@ public class ProfileController {
         profileService.changePassword(authentication.getName(), request);
         return ApiResponse.success("Password changed successfully", null);
     }
-
-    @PatchMapping("/two-factor")
-    public ApiResponse<UserResponse> setTwoFactor(Authentication authentication, @RequestParam boolean enabled) {
-        return ApiResponse.success(profileService.setTwoFactor(authentication.getName(), enabled));
-    }
 }

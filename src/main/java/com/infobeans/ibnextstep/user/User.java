@@ -42,8 +42,6 @@ public class User {
     // --- Department linkage (Admin's Org Settings) ---
     private String departmentId;
 
-    // --- 2FA (email OTP) ---
-    private boolean twoFactorEnabled;
 
     // --- Password reset / OTP tracking ---
     @Field("otp_code")

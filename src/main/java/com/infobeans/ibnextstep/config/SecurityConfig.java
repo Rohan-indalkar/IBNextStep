@@ -35,7 +35,11 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/actuator/health"
+            "/actuator/health",
+            // CHANGED — the STOMP/SockJS handshake is auth'd separately by
+            // JwtHandshakeInterceptor (token comes in as a query param, not
+            // an Authorization header), so JwtAuthFilter must not 401 it.
+            "/ws/**"
     };
 
     @Bean
@@ -63,7 +67,7 @@ public class SecurityConfig {
 
         return provider;
     }
-    
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

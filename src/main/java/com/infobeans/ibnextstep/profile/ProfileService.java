@@ -44,15 +44,6 @@ public class ProfileService {
                 "PASSWORD_CHANGED", "User changed their own password", null);
     }
 
-    public UserResponse setTwoFactor(String email, boolean enabled) {
-        User user = getOrThrow(email);
-        user.setTwoFactorEnabled(enabled);
-        user = userRepository.save(user);
-        auditLogService.log(user.getId(), user.getEmail(), user.getRole().name(),
-                enabled ? "TWO_FACTOR_ENABLED" : "TWO_FACTOR_DISABLED", "User toggled 2FA", null);
-        return UserResponse.from(user);
-    }
-
     private User getOrThrow(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

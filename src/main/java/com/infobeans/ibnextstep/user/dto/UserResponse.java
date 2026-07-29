@@ -23,7 +23,7 @@ public class UserResponse {
     private TrainerType trainerType;
     private UserStatus status;
     private String departmentId;
-    private boolean twoFactorEnabled;
+ 
     private Instant createdAt;
 
     public static UserResponse from(User user) {
@@ -36,7 +36,7 @@ public class UserResponse {
                 user.getTrainerType(),
                 user.getStatus(),
                 user.getDepartmentId(),
-                user.isTwoFactorEnabled(),
+                
                 user.getCreatedAt()
         );
     }
