@@ -55,7 +55,6 @@ public class UserService {
                 .trainerType(request.getRole() == Role.TRAINER ? request.getTrainerType() : null)
                 .departmentId(request.getDepartmentId())
                 .status(UserStatus.ACTIVE)
-                .twoFactorEnabled(true)
                 .mustChangePassword(true)
                 .createdAt(Instant.now())
                 .build();
