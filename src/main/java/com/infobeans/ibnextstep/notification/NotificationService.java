@@ -42,37 +42,54 @@ public class NotificationService {
                 : userRepository.findAll();
 
         for (User recipient : recipients) {
-            Notification notification = Notification.builder()
-                    .recipientUserId(recipient.getId())
-                    .title(request.getTitle())
-                    .message(request.getMessage())
-                    .senderUserId(sender != null ? sender.getId() : null)
-                    .senderRole(senderRole)
-                    .read(false)
-                    .createdAt(Instant.now())
-                    .build();
-
-            notification = notificationRepository.save(notification);
-            emailService.send(recipient.getEmail(), request.getTitle(), request.getMessage());
-
-            // In-app real-time push — delivered only while the recipient
-            // has the app open in a browser tab.
-            messagingTemplate.convertAndSendToUser(
-                    recipient.getEmail(),
-                    "/queue/notifications",
-                    notification
-            );
-
-            // NEW — OS-level push — delivered even with the app/tab closed,
-            // to every device/browser the recipient has subscribed on.
-            // Silent no-op if they never granted permission.
-            webPushService.sendToUser(recipient.getId(), request.getTitle(), request.getMessage());
+            deliverToRecipient(recipient, request.getTitle(), request.getMessage(),
+                    sender != null ? sender.getId() : null, senderRole);
         }
 
         auditLogService.log(sender != null ? sender.getId() : null, senderEmail, senderRole,
                 "NOTIFICATION_SENT", "Sent notification '" + request.getTitle() + "' to "
                         + (request.getAudience() != null ? request.getAudience().name() : "ALL")
                         + " (" + recipients.size() + " recipients)", null);
+    }
+
+   
+    public void sendToUser(String recipientUserId, String title, String message, String senderRole) {
+        User recipient = userRepository.findById(recipientUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + recipientUserId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String senderEmail = auth != null ? auth.getName() : "system";
+        User sender = userRepository.findByEmail(senderEmail).orElse(null);
+
+        deliverToRecipient(recipient, title, message, sender != null ? sender.getId() : null, senderRole);
+    }
+
+    private void deliverToRecipient(User recipient, String title, String message, String senderUserId, String senderRole) {
+        Notification notification = Notification.builder()
+                .recipientUserId(recipient.getId())
+                .title(title)
+                .message(message)
+                .senderUserId(senderUserId)
+                .senderRole(senderRole)
+                .read(false)
+                .createdAt(Instant.now())
+                .build();
+
+        notification = notificationRepository.save(notification);
+        emailService.send(recipient.getEmail(), title, message);
+
+        // In-app real-time push — delivered only while the recipient
+        // has the app open in a browser tab.
+        messagingTemplate.convertAndSendToUser(
+                recipient.getEmail(),
+                "/queue/notifications",
+                notification
+        );
+
+        // OS-level push — delivered even with the app/tab closed, to every
+        // device/browser the recipient has subscribed on. Silent no-op if
+        // they never granted permission.
+        webPushService.sendToUser(recipient.getId(), title, message);
     }
 
     public PagedResponse<Notification> myNotifications(String userId, Pageable pageable) {
