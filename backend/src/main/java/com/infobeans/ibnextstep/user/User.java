@@ -53,6 +53,12 @@ public class User {
 
     private boolean mustChangePassword;
 
+    // --- Placement readiness (rolling score fed by mock interviews today;
+    // will incorporate quizzes/assignments once those modules publish
+    // scores too). Only meaningful when role == STUDENT. ---
+    private Double placementReadinessScore;
+    private Instant placementReadinessScoreUpdatedAt;
+
     @CreatedDate
     private Instant createdAt;
 
