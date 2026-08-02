@@ -1,22 +1,28 @@
 package com.infobeans.ibnextstep.material;
 
 import com.infobeans.ibnextstep.audit.AuditLogService;
+import com.infobeans.ibnextstep.batch.Batch;
 import com.infobeans.ibnextstep.batch.BatchRepository;
 import com.infobeans.ibnextstep.common.PagedResponse;
 import com.infobeans.ibnextstep.common.exception.BadRequestException;
 import com.infobeans.ibnextstep.common.exception.ResourceNotFoundException;
+import com.infobeans.ibnextstep.common.util.EmailService;
 import com.infobeans.ibnextstep.common.util.FileStorageService;
 import com.infobeans.ibnextstep.course.Course;
 import com.infobeans.ibnextstep.course.CourseRepository;
 import com.infobeans.ibnextstep.material.dto.SchedulePublishRequest;
 import com.infobeans.ibnextstep.material.dto.StudyMaterialRequest;
 import com.infobeans.ibnextstep.material.dto.StudyMaterialResponse;
+import com.infobeans.ibnextstep.notification.Notification;
+import com.infobeans.ibnextstep.notification.NotificationRepository;
+import com.infobeans.ibnextstep.notification.WebPushService;
 import com.infobeans.ibnextstep.user.Role;
 import com.infobeans.ibnextstep.user.User;
 import com.infobeans.ibnextstep.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,8 +31,10 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -41,6 +49,10 @@ public class StudyMaterialService {
     private final BatchRepository batchRepository;
     private final FileStorageService fileStorageService;
     private final AuditLogService auditLogService;
+    private final NotificationRepository notificationRepository;
+    private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final WebPushService webPushService;
 
     // ==================== CREATE ====================
 
@@ -72,6 +84,9 @@ public class StudyMaterialService {
         material = studyMaterialRepository.save(material);
         audit(trainer, "STUDY_MATERIAL_UPLOADED",
                 "Uploaded study material '" + material.getTitle() + "' (" + material.getStatus() + ")");
+        if (material.getStatus() == MaterialStatus.PUBLISHED) {
+            notifyBatchesMaterialPublished(material);
+        }
 
         return enrich(material);
     }
@@ -111,6 +126,9 @@ public class StudyMaterialService {
 
         material = studyMaterialRepository.save(material);
         audit(trainer, "STUDY_MATERIAL_UPDATED", "Updated study material '" + material.getTitle() + "'");
+        if (material.getStatus() == MaterialStatus.PUBLISHED) {
+            notifyBatchesMaterialPublished(material);
+        }
 
         return enrich(material);
     }
@@ -159,6 +177,7 @@ public class StudyMaterialService {
         material.setPublishedAt(Instant.now());
         material = studyMaterialRepository.save(material);
         audit(trainer, "STUDY_MATERIAL_PUBLISHED", "Published study material '" + material.getTitle() + "'");
+        notifyBatchesMaterialPublished(material);
         return enrich(material);
     }
 
@@ -282,6 +301,9 @@ public class StudyMaterialService {
     }
 
     private void applyPublishOption(StudyMaterial material, PublishOption option, Instant scheduledAt) {
+        if (option == null) {
+            throw new BadRequestException("publishOption is required: SAVE_AS_DRAFT, PUBLISH_NOW, or SCHEDULE_PUBLISH");
+        }
         switch (option) {
             case SAVE_AS_DRAFT -> {
                 material.setStatus(MaterialStatus.DRAFT);
@@ -316,6 +338,34 @@ public class StudyMaterialService {
                     .build());
         }
         return stored;
+    }
+
+    private void notifyBatchesMaterialPublished(StudyMaterial material) {
+        if (material.getBatchIds() == null || material.getBatchIds().isEmpty()) return;
+        Set<String> studentIds = new HashSet<>();
+        for (Batch batch : batchRepository.findAllById(material.getBatchIds())) {
+            if (batch.getStudentIds() != null) studentIds.addAll(batch.getStudentIds());
+        }
+        for (User student : userRepository.findAllById(studentIds)) {
+            notify(student, "New Study Material: " + material.getTitle(),
+                    "A new study material '" + material.getTitle() + "' has been published for your batch.");
+        }
+    }
+
+    private void notify(User recipient, String title, String message) {
+        Notification notification = Notification.builder()
+                .recipientUserId(recipient.getId())
+                .title(title)
+                .message(message)
+                .senderRole("TRAINER")
+                .read(false)
+                .createdAt(Instant.now())
+                .build();
+        notification = notificationRepository.save(notification);
+
+        emailService.send(recipient.getEmail(), title, message);
+        messagingTemplate.convertAndSendToUser(recipient.getEmail(), "/queue/notifications", notification);
+        webPushService.sendToUser(recipient.getId(), title, message);
     }
 
     private void audit(User trainer, String action, String details) {

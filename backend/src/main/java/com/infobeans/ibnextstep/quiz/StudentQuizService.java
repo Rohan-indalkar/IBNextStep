@@ -45,20 +45,13 @@ public class StudentQuizService {
                 .toList();
     }
 
-    /** "Read Instructions" — metadata only, no questions yet (those only appear after Start, and even then with no answers). */
     public Quiz getInstructions(String studentEmail, String quizId) {
         User student = getStudent(studentEmail);
         Quiz quiz = getAssignedQuiz(student, quizId);
         return quiz;
     }
 
-    /**
-     * "Start Quiz" — creates the ONE allowed attempt. Every student gets a
-     * different, independently-shuffled question set: this method never
-     * reuses another student's ordering, and re-calling it for an existing
-     * attempt just returns the SAME questions again (so refreshing the page
-     * doesn't reshuffle mid-quiz).
-     */
+    
     public List<StudentQuestionView> start(String studentEmail, String quizId, String ipAddress, String userAgent) {
         User student = getStudent(studentEmail);
         Quiz quiz = getAssignedQuiz(student, quizId);
@@ -116,13 +109,33 @@ public class StudentQuizService {
         attemptRepository.save(attempt);
     }
 
-    /** "Submit Quiz" -> "Auto Evaluation" -> "Result", all in one call. */
+    /** "Submit Quiz" -> "Auto Evaluation" -> "Result", all in one call. Also the safety net for "Auto submit when timer ends". */
     public QuizResult submit(String studentEmail, String quizId, SubmitQuizRequest request) {
-        QuizAttempt attempt = getInProgressAttempt(studentEmail, quizId);
+        User student = getStudent(studentEmail);
+        QuizAttempt attempt = attemptRepository.findByQuizIdAndStudentId(quizId, student.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("You haven't started this quiz yet"));
+
+        // If a previous call already auto-submitted this on timer expiry (or the student already submitted),
+        // treat a repeat "submit" click as idempotent instead of erroring — just hand back the existing result.
+        if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
+            return resultRepository.findByQuizIdAndStudentId(quizId, student.getId())
+                    .orElseThrow(() -> new BadRequestException("This attempt is already " + attempt.getStatus()));
+        }
+
         if (request != null && request.getAnswers() != null) {
             attempt.getSavedAnswers().putAll(request.getAnswers());
         }
-        return finalizeAttempt(attempt, AttemptStatus.SUBMITTED);
+
+        boolean timeExpired = isTimeExpired(attempt, quizId);
+        return finalizeAttempt(attempt, timeExpired ? AttemptStatus.AUTO_SUBMITTED_TIMER : AttemptStatus.SUBMITTED);
+    }
+
+    /** True once now() has passed (startedAt + quiz's allotted duration) — the actual "Timer: auto submit when time is over" check. */
+    private boolean isTimeExpired(QuizAttempt attempt, String quizId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found: " + quizId));
+        Instant deadline = attempt.getStartedAt().plus(java.time.Duration.ofMinutes(quiz.getDurationMinutes()));
+        return Instant.now().isAfter(deadline);
     }
 
     /**
@@ -174,6 +187,23 @@ public class StudentQuizService {
         }
 
         return Map.of("warningNumber", currentCount, "autoSubmitted", autoSubmitted);
+    }
+
+    /**
+     * Safety net for students who just close the tab and never call any
+     * endpoint again — without this, their attempt would stay IN_PROGRESS
+     * forever with no result. Runs every minute and finalizes anything past
+     * its deadline. The per-request check in getInProgressAttempt/submit()
+     * handles the common case instantly; this catches the rest.
+     */
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 60_000)
+    public void autoSubmitExpiredAttempts() {
+        List<QuizAttempt> inProgress = attemptRepository.findByStatus(AttemptStatus.IN_PROGRESS);
+        for (QuizAttempt attempt : inProgress) {
+            if (isTimeExpired(attempt, attempt.getQuizId())) {
+                finalizeAttempt(attempt, AttemptStatus.AUTO_SUBMITTED_TIMER);
+            }
+        }
     }
 
     // ==================== internal ====================
@@ -274,6 +304,12 @@ public class StudentQuizService {
         User student = getStudent(studentEmail);
         QuizAttempt attempt = attemptRepository.findByQuizIdAndStudentId(quizId, student.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("You haven't started this quiz yet"));
+
+        if (attempt.getStatus() == AttemptStatus.IN_PROGRESS && isTimeExpired(attempt, quizId)) {
+            finalizeAttempt(attempt, AttemptStatus.AUTO_SUBMITTED_TIMER);
+            throw new BadRequestException("Time's up — this quiz was automatically submitted when the timer expired");
+        }
+
         if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
             throw new BadRequestException("This attempt is already " + attempt.getStatus() + " — no further changes allowed");
         }
