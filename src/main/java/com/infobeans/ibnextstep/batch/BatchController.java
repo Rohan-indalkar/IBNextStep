@@ -9,6 +9,7 @@ import com.infobeans.ibnextstep.common.PagedResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,7 +67,7 @@ public class BatchController {
         return ApiResponse.success("Students assigned", batchService.assignStudents(id, request));
     }
 
-    @PostMapping("/{id}/students/bulk-import")
+    @PostMapping(value = "/{id}/students/bulk-import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<BulkImportResult> bulkImportStudents(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return ApiResponse.success("Bulk student import processed", batchService.bulkImportStudents(id, file));
     }

@@ -19,4 +19,8 @@ public interface AttendanceRecordRepository extends MongoRepository<AttendanceRe
     List<AttendanceRecord> findByBatchIdAndStudentIdAndDateBetween(String batchId, String studentId, LocalDate start, LocalDate end);
 
     boolean existsByBatchIdAndDate(String batchId, LocalDate date);
+
+    // NEW — needed by StudentEvaluationService to compute a student's
+    // all-time attendance percentage for the eligibility snapshot.
+    List<AttendanceRecord> findByStudentId(String studentId);
 }
