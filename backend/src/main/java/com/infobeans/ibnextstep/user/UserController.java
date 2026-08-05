@@ -9,6 +9,7 @@ import com.infobeans.ibnextstep.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,7 +27,7 @@ public class UserController {
         return ApiResponse.success("User created and credentials emailed", userService.createUser(request));
     }
 
-    @PostMapping("/bulk-import")
+    @PostMapping(value = "/bulk-import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<BulkImportResult> bulkImport(@RequestParam("file") MultipartFile file) {
         return ApiResponse.success("Bulk import processed", userService.bulkImportUsers(file));
     }
