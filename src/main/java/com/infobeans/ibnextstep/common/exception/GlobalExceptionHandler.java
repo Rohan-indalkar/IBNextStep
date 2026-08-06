@@ -1,6 +1,7 @@
 package com.infobeans.ibnextstep.common.exception;
 
 import com.infobeans.ibnextstep.common.ApiResponse;
+import com.infobeans.ibnextstep.placement.exception.NotEligibleException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(UnauthorizedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(NotEligibleException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotEligible(NotEligibleException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage(), ex.getEligibility().getFailedCriteria()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

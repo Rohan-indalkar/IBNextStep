@@ -3,8 +3,8 @@ package com.infobeans.ibnextstep.dashboard;
 import com.infobeans.ibnextstep.batch.Batch;
 import com.infobeans.ibnextstep.batch.BatchRepository;
 import com.infobeans.ibnextstep.course.CourseRepository;
-import com.infobeans.ibnextstep.placement.PlacementOpportunity;
-import com.infobeans.ibnextstep.placement.PlacementOpportunityRepository;
+import com.infobeans.ibnextstep.placement.PlacementRepository;
+import com.infobeans.ibnextstep.placement.PlacementStatus;
 import com.infobeans.ibnextstep.user.Role;
 import com.infobeans.ibnextstep.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class AdminDashboardService {
     private final UserRepository userRepository;
     private final BatchRepository batchRepository;
     private final CourseRepository courseRepository;
-    private final PlacementOpportunityRepository opportunityRepository;
+    private final PlacementRepository placementRepository;
 
     public AdminDashboardStats getStats() {
         long students = userRepository.findByRole(Role.STUDENT, Pageable.unpaged()).getTotalElements();
@@ -28,10 +28,13 @@ public class AdminDashboardService {
                 .filter(b -> b.getStatus() == Batch.BatchStatus.ACTIVE)
                 .count();
         long courses = courseRepository.count();
-        long pendingApprovals = opportunityRepository
-                .findByStatus(PlacementOpportunity.OpportunityStatus.PENDING_APPROVAL, Pageable.unpaged())
-                .getTotalElements();
+        // The old campus-drive "pending approval" workflow was removed: Admin no
+        // longer approves/rejects placements (HR publishes directly). This slot
+        // now surfaces something Admin's read-only role actually cares about —
+        // how many drives are currently live — instead of a dead concept.
+        long activePlacementDrives = placementRepository.countByStatus(PlacementStatus.PUBLISHED);
 
-        return new AdminDashboardStats(students, trainers, hr, activeBatches, courses, pendingApprovals);
+        return new AdminDashboardStats(students, trainers, hr, activeBatches, courses, activePlacementDrives);
     }
 }
+

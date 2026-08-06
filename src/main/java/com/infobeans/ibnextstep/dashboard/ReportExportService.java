@@ -112,10 +112,10 @@ public class ReportExportService {
 
     public java.util.List<ReportInfo> availableReports(String query) {
         java.util.List<ReportInfo> catalog = java.util.List.of(
-                new ReportInfo("system-summary", "System Summary", "Counts of students, trainers, HR, active batches, courses, and pending approvals", "Overview"),
+                new ReportInfo("system-summary", "System Summary", "Counts of students, trainers, HR, active batches, courses, and active placement drives", "Overview"),
                 new ReportInfo("users-export", "User Directory Export", "Full list of all users with role, status, and trainer type", "Users"),
                 new ReportInfo("batch-status", "Batch Status Report", "Active vs inactive batches with enrollment counts", "Batches"),
-                new ReportInfo("placement-approvals", "Placement Approval Log", "Approved and rejected placement opportunities", "Placements"),
+                new ReportInfo("placement-analytics", "Placement Analytics Report", "Drives, applications, selections, and package stats — see /api/admin/placements/analytics/export", "Placements"),
                 new ReportInfo("audit-activity", "Audit Activity Report", "Recent login, logout, and record-change events", "Audit")
         );
 

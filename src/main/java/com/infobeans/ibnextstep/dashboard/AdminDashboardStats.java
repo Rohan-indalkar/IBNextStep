@@ -11,5 +11,5 @@ public class AdminDashboardStats {
     private long totalHr;
     private long activeBatches;
     private long totalCourses;
-    private long pendingApprovals;
+    private long activePlacementDrives;
 }
