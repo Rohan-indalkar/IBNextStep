@@ -1,22 +1,11 @@
 package com.infobeans.ibnextstep.studentevaluation;
 
-import com.infobeans.ibnextstep.attendance.AttendanceRecord;
-import com.infobeans.ibnextstep.attendance.AttendanceRecordRepository;
-import com.infobeans.ibnextstep.attendance.AttendanceStatus;
 import com.infobeans.ibnextstep.audit.AuditLogService;
 import com.infobeans.ibnextstep.batch.Batch;
 import com.infobeans.ibnextstep.batch.BatchRepository;
-import com.infobeans.ibnextstep.codingassessment.CodingQuestionRepository;
-import com.infobeans.ibnextstep.codingassessment.Submission;
-import com.infobeans.ibnextstep.codingassessment.SubmissionRepository;
 import com.infobeans.ibnextstep.common.exception.BadRequestException;
 import com.infobeans.ibnextstep.common.exception.ResourceNotFoundException;
-import com.infobeans.ibnextstep.mockinterview.MockInterview;
-import com.infobeans.ibnextstep.mockinterview.MockInterviewRepository;
-import com.infobeans.ibnextstep.mockinterview.MockInterviewStatus;
 import com.infobeans.ibnextstep.notification.NotificationService;
-import com.infobeans.ibnextstep.quiz.QuizResult;
-import com.infobeans.ibnextstep.quiz.QuizResultRepository;
 import com.infobeans.ibnextstep.studentevaluation.dto.BatchEvaluationOverviewResponse;
 import com.infobeans.ibnextstep.studentevaluation.dto.CombinedEvaluationResponse;
 import com.infobeans.ibnextstep.studentevaluation.dto.EvaluationMetricsResponse;
@@ -40,7 +29,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,11 +41,7 @@ public class StudentEvaluationService {
     private final EvaluationRubricConfigRepository rubricConfigRepository;
     private final UserRepository userRepository;
     private final BatchRepository batchRepository;
-    private final AttendanceRecordRepository attendanceRecordRepository;
-    private final QuizResultRepository quizResultRepository;
-    private final SubmissionRepository submissionRepository;
-    private final CodingQuestionRepository codingQuestionRepository;
-    private final MockInterviewRepository mockInterviewRepository;
+    private final StudentMetricsService studentMetricsService;
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
 
@@ -467,52 +451,14 @@ public class StudentEvaluationService {
         Metrics m = new Metrics();
         List<String> reasons = new ArrayList<>();
 
-        // Attendance: PRESENT and LATE both count as attended; ABSENT does not.
-        List<AttendanceRecord> attendanceRecords = attendanceRecordRepository.findByStudentId(studentId);
-        if (!attendanceRecords.isEmpty()) {
-            long attended = attendanceRecords.stream()
-                    .filter(r -> r.getStatus() == AttendanceStatus.PRESENT || r.getStatus() == AttendanceStatus.LATE)
-                    .count();
-            m.attendancePercentage = round(attended * 100.0 / attendanceRecords.size());
-        }
-
-        // Quiz: average of each attempt's already-computed percentage.
-        List<QuizResult> quizResults = quizResultRepository.findByStudentId(studentId);
-        if (!quizResults.isEmpty()) {
-            m.avgQuizPercentage = round(quizResults.stream().mapToDouble(QuizResult::getPercentage).average().orElse(0));
-        }
-
-        // Coding: best submission per question (not every attempt — resubmits shouldn't drag the average down),
-        // as a percentage of that question's max marks (questions carry different weights).
-        List<Submission> submissions = submissionRepository.findByStudentIdAndRunOnlyFalse(studentId);
-        if (!submissions.isEmpty()) {
-            Map<String, Double> bestMarksByQuestion = new HashMap<>();
-            for (Submission s : submissions) {
-                bestMarksByQuestion.merge(s.getQuestionId(), s.getMarksAwarded(), Math::max);
-            }
-            List<Double> percentages = new ArrayList<>();
-            for (Map.Entry<String, Double> entry : bestMarksByQuestion.entrySet()) {
-                codingQuestionRepository.findById(entry.getKey()).ifPresent(question -> {
-                    if (question.getMarks() > 0) {
-                        percentages.add(entry.getValue() * 100.0 / question.getMarks());
-                    }
-                });
-            }
-            if (!percentages.isEmpty()) {
-                m.avgCodingPercentage = round(percentages.stream().mapToDouble(Double::doubleValue).average().orElse(0));
-            }
-        }
-
-        // Mock interviews: only ones the trainer has actually published a rating for.
-        List<MockInterview> publishedInterviews = mockInterviewRepository.findByStudentIdAndStatus(studentId, MockInterviewStatus.PUBLISHED);
-        List<Double> ratings = publishedInterviews.stream()
-                .map(MockInterview::getEvaluation)
-                .filter(e -> e != null && e.getOverallRating() != null)
-                .map(MockInterview.Evaluation::getOverallRating)
-                .toList();
-        if (!ratings.isEmpty()) {
-            m.avgMockInterviewRating = round(ratings.stream().mapToDouble(Double::doubleValue).average().orElse(0));
-        }
+        // Raw numbers come from the shared StudentMetricsService (single source of
+        // truth also used by the Placement module's eligibility engine) — this
+        // method's own job is just applying this evaluation flow's thresholds.
+        StudentRawMetrics raw = studentMetricsService.computeRawMetrics(studentId);
+        m.attendancePercentage = raw.getAttendancePercentage();
+        m.avgQuizPercentage = raw.getAvgQuizPercentage();
+        m.avgCodingPercentage = raw.getAvgCodingPercentage();
+        m.avgMockInterviewRating = raw.getAvgMockInterviewRating();
 
         // Eligibility: every tracked metric must exist AND clear its threshold.
         // A metric that's simply missing (e.g. no mock interviews yet) counts as not-eligible-yet,
