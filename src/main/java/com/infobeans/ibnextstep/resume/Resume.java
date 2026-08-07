@@ -52,5 +52,10 @@ public class Resume {
         private String reviewedByTrainerId;
         private String reviewedByTrainerName;
         private Instant reviewedAt;
+
+        // AI analysis for THIS version — cached so re-viewing doesn't re-call Gemini.
+        // Cleared implicitly by never being copied to the next version's builder,
+        // so a fresh re-upload always starts with no stale analysis.
+        private ResumeAiAnalysis aiAnalysis;
     }
 }

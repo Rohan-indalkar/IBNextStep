@@ -47,6 +47,41 @@ public class ResumeController {
                 .body(file);
     }
 
+    /**
+     * "Analyze with AI" (draft mode) — returns Gemini's feedback without
+     * changing status or notifying the student. Cached per version.
+     */
+    @GetMapping("/students/{studentId}/resume/analyze")
+    public ApiResponse<ResumeAiAnalysis> analyze(@PathVariable String studentId,
+                                                  @RequestParam(defaultValue = "false") boolean refresh,
+                                                  Authentication authentication) {
+        return ApiResponse.success(resumeService.analyzeStudentResume(authentication.getName(), studentId, refresh));
+    }
+
+    /**
+     * "Auto-Review with AI" — AI score alone decides APPROVED / NEEDS_CHANGES,
+     * writes it as the review, and notifies the student. No manual confirm step.
+     */
+    @PostMapping("/students/{studentId}/resume/auto-review")
+    public ApiResponse<AutoReviewResult> autoReview(@PathVariable String studentId,
+                                                      @RequestParam(defaultValue = "false") boolean refresh,
+                                                      Authentication authentication) {
+        return ApiResponse.success("Auto-review complete",
+                resumeService.autoReviewStudentResume(authentication.getName(), studentId, refresh));
+    }
+
+    /**
+     * "Auto-Review All Pending" — runs auto-review across every
+     * PENDING_REVIEW resume in this trainer's batches in one call; each
+     * student gets notified individually as their resume is decided.
+     */
+    @PostMapping("/resumes/auto-review-all")
+    public ApiResponse<List<AutoReviewResult>> autoReviewAll(@RequestParam(defaultValue = "false") boolean refresh,
+                                                                Authentication authentication) {
+        return ApiResponse.success("Bulk auto-review complete",
+                resumeService.autoReviewAllPending(authentication.getName(), refresh));
+    }
+
     /** "Review Resume" -> "Provide Suggestions" -> "Assign Resume Score" -> "Choose Status" -> notifies the student automatically. */
     @PostMapping("/students/{studentId}/resume/review")
     public ApiResponse<Resume> review(@PathVariable String studentId, @Valid @RequestBody ReviewResumeRequest request, Authentication authentication) {
