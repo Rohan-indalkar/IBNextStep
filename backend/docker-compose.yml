@@ -1,0 +1,30 @@
+# Local dev environment for IBNextStep.
+#
+# Run:   docker compose up -d
+# Then:  ./mvnw spring-boot:run
+#
+# - MongoDB is reachable at mongodb://localhost:27017/ibnextstep_db
+#   (matches spring.data.mongodb.uri in application.properties)
+# - MailHog is a fake SMTP server: every OTP / account email the app sends
+#   lands in its web inbox at http://localhost:8025 instead of a real inbox
+#   and instead of needing real SMTP credentials.
+#services:
+ ##  image: mongo:7
+   # container_name: ibnextstep-mongo
+    #ports:
+     # - "27017:27017"
+   # volumes:
+    #  - ibnextstep-mongo-data:/data/db
+    #restart: unless-stopped
+
+  #mailhog:
+    #image: mailhog/mailhog:latest
+    #container_name: ibnextstep-mailhog
+   # ports:
+     # - "1025:1025"   # SMTP
+      #- "8025:8025"   # Web UI — open this in a browser to read OTP emails
+    #restart: unless-stopped
+
+#volumes:
+ # ibnextstep-mongo-data:
+
