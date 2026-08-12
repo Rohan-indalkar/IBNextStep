@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IBNextStep — Training & Placement Management System</title>
+  <!-- Google Fonts & FontAwesome / Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #181824;
+      --bg-card: #222232;
+      --bg-card-hover: #2A2A3E;
+      --primary-red: #E81838;
+      --primary-red-glow: rgba(232, 24, 56, 0.25);
+      --accent-rose: #F8D0D8;
+      --text-white: #FFFFFF;
+      --text-muted: #A0A0B8;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --font-heading: 'Sora', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Deck Layout */
+    .deck-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    .top-bar {
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(24, 24, 36, 0.9);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 100;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .logo-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--primary-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 0.9rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-white);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+    }
+
+    .btn-red {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+    }
+
+    .slide-counter {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* Progress Line */
+    .progress-bar-container {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary-red);
+      transition: width 0.3s ease;
+    }
+
+    /* Slide Stage */
+    .slide-stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px) scale(0.98);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Header formatting */
+    .slide-header {
+      margin-bottom: 24px;
+    }
+
+    .category-tag {
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--primary-red);
+      margin-bottom: 6px;
+      display: inline-block;
+    }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    /* Content Layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: 100%; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+    /* Card styling */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(232, 24, 56, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .card-accent-top {
+      border-top: 4px solid var(--primary-red);
+    }
+
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(232, 24, 56, 0.15);
+      color: var(--primary-red);
+      display: flex;
+      align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Stat Box */
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary-red);
+    }
+
+    .stat-lbl {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Workflow Stepper */
+    .stepper {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+      margin-top: 10px;
+    }
+
+    .step-item {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .step-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--primary-red);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .step-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Diagrams Area */
+    .mermaid-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Hero Slide */
+    .hero-slide {
+      justify-content: center;
+      align-items: flex-start;
+      padding-left: 10%;
+    }
+
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E0E0E0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-title span {
+      color: var(--primary-red);
+      -webkit-text-fill-color: var(--primary-red);
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .pill-red {
+      background: var(--primary-red-glow);
+      border-color: var(--primary-red);
+      color: #FF6B81;
+    }
+
+    /* Animation Keyframes */
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(232, 24, 56, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(232, 24, 56, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(232, 24, 56, 0); }
+    }
+
+    .glow-pulse { animation: pulseGlow 2s infinite; }
+  </style>
+</head>
+<body>
+
+<div class="deck-container">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="brand-logo">
+      <div class="logo-badge">»</div>
+      <span>IBNextStep</span>
+    </div>
+    <div class="controls">
+      <button class="btn" id="prevBtn" onclick="prevSlide()">← Prev</button>
+      <span class="slide-counter" id="counter">1 / 18</span>
+      <button class="btn btn-red" id="nextBtn" onclick="nextSlide()">Next →</button>
+      <button class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Slide Stage -->
+  <div class="slide-stage">
+
+    <!-- Slide 1: Title -->
+    <div class="slide hero-slide active">
+      <span class="category-tag">Student Training & Placement Platform</span>
+      <h1 class="hero-title">IBNextStep <span>.</span></h1>
+      <p class="hero-subtitle">An end-to-end Enterprise Platform connecting Admin, Trainers, Students, and HR recruiters — from course setup to final offer letters.</p>
+      <div class="pills">
+        <span class="pill pill-red">React 19</span>
+        <span class="pill pill-red">Material UI</span>
+        <span class="pill pill-red">Spring Boot</span>
+        <span class="pill pill-red">MongoDB</span>
+        <span class="pill pill-red">JWT Security</span>
+      </div>
+    </div>
+
+    <!-- Slide 2: Team Members -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Project Team</span>
+        <h2 class="slide-title">Team Members & Contributions</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card card-accent-top">
+          <div class="card-icon">01</div>
+          <h3 class="card-title">Full-Stack Architecture</h3>
+          <p class="card-desc">Designed Spring Boot REST controllers, MongoDB database models, and React routing pipeline.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">02</div>
+          <h3 class="card-title">Frontend UI/UX Polish</h3>
+          <p class="card-desc">Engineered unified design tokens, responsive cards, sidebars, and Material-UI SaaS components.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">03</div>
+          <h3 class="card-title">AI Integration & Security</h3>
+          <p class="card-desc">Implemented JWT RBAC authentication, OpenAI/Gemini question generator, and resume scoring.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Executive Overview -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Introduction</span>
+        <h2 class="slide-title">Project Executive Summary</h2>
+      </div>
+      <div class="grid-2">
+        <div style="display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+          <p style="font-size: 1.05rem; line-height: 1.6; color: var(--text-muted);">
+            IBNextStep digitizes the complete academic and placement lifecycle for training institutes. It replaces fragmented spreadsheets with one connected system.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; mt: 10px;">
+            <div class="stat-box"><div class="stat-val">4</div><div class="stat-lbl">User Roles</div></div>
+            <div class="stat-box"><div class="stat-val">35+</div><div class="stat-lbl">REST Controllers</div></div>
+            <div class="stat-box"><div class="stat-val">20+</div><div class="stat-lbl">Backend Modules</div></div>
+            <div class="stat-box"><div class="stat-val">AI</div><div class="stat-lbl">Smart Generator</div></div>
+          </div>
+        </div>
+        <div class="mermaid-container">
+          <div class="mermaid">
+            graph TD
+              A[Academic Setup] --> B[Training & Assessments]
+              B --> C[Evaluation & Resume]
+              C --> D[Placement Drives & Offers]
+              style A fill:#2A2A3E,stroke:#E81838,stroke-width:2px,color:#fff
+              style B fill:#2A2A3E,stroke:#E81838,stroke-width:2px,color:#fff
+              style C fill:#2A2A3E,stroke:#E81838,stroke-width:2px,color:#fff
+              style D fill:#E81838,stroke:#fff,stroke-width:2px,color:#fff
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: System Architecture Diagram -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Architecture</span>
+        <h2 class="slide-title">System Architecture & Layer Flow</h2>
+      </div>
+      <div class="mermaid-container">
+        <div class="mermaid">
+          flowchart LR
+            subgraph Client["Client Layer"]
+              React["React 19 + MUI SPA"]
+            end
+            subgraph Security["Security Layer"]
+              JWT["JWT Filter + RBAC"]
+            end
+            subgraph API["API Layer"]
+              REST["Spring Boot REST API"]
+            end
+            subgraph Service["Service Layer"]
+              Biz["Business Logic & AI Services"]
+            end
+            subgraph Data["Data Layer"]
+              Mongo["MongoDB Repositories"]
+            end
+            React --> JWT --> REST --> Biz --> Mongo
+            style Client fill:#222232,stroke:#E81838,color:#fff
+            style Security fill:#222232,stroke:#E81838,color:#fff
+            style API fill:#222232,stroke:#E81838,color:#fff
+            style Service fill:#222232,stroke:#E81838,color:#fff
+            style Data fill:#222232,stroke:#E81838,color:#fff
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Tech Stack Breakdown -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Technology Stack</span>
+        <h2 class="slide-title">Frontend & Backend Stack</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card card-accent-top">
+          <div class="card-icon">⚡</div>
+          <h3 class="card-title">Frontend Engine</h3>
+          <p class="card-desc">React 19 + Vite 8 single-page application with Axios interceptors and React Router v7.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">🎨</div>
+          <h3 class="card-title">Design System</h3>
+          <p class="card-desc">Material UI (MUI v6) SaaS component system with Sora & Inter Google Fonts typography.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">🛡️</div>
+          <h3 class="card-title">Backend & Database</h3>
+          <p class="card-desc">Spring Boot Java REST API, Spring Security + JWT authentication, and MongoDB NoSQL storage.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: 4 User Roles -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Access Control</span>
+        <h2 class="slide-title">Multi-Role Persona System</h2>
+      </div>
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-icon">AD</div>
+          <h3 class="card-title">Admin</h3>
+          <p class="card-desc">Platform configuration, departments, courses, batch timetables, and audit logging.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">TR</div>
+          <h3 class="card-title">Trainer</h3>
+          <p class="card-desc">Academic delivery, daily attendance, AI assignments, quizzes, and student evaluations.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">ST</div>
+          <h3 class="card-title">Student</h3>
+          <p class="card-desc">Coursework learning, MCQ quizzes, live coding tests, resume scoring, and drive applications.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">HR</div>
+          <h3 class="card-title">HR / Recruiter</h3>
+          <p class="card-desc">Company onboarding, placement drives, shortlisting, and multi-round interview pipelines.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Admin Features -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Admin Module</span>
+        <h2 class="slide-title">Admin Capabilities</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h3 class="card-title">User & Role Management</h3><p class="card-desc">Create, edit, activate/deactivate users across Admin, Trainer, Student, HR roles.</p></div>
+        <div class="card"><h3 class="card-title">Academic Structuring</h3><p class="card-desc">Setup departments, courses, skill tags, and batch rosters.</p></div>
+        <div class="card"><h3 class="card-title">Permanent Audit Logs</h3><p class="card-desc">Track every administrative action for accountability and compliance.</p></div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Admin Workflow -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Admin Module</span>
+        <h2 class="slide-title">Admin Operational Workflow</h2>
+      </div>
+      <div class="stepper">
+        <div class="step-item"><div class="step-num">1</div><div class="step-title">JWT Login</div><div class="step-desc">Authenticate with admin credentials</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-title">Setup Org</div><div class="step-desc">Create Departments & Courses</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-title">Create Batches</div><div class="step-desc">Assign technical & soft skill trainers</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-title">Onboard Students</div><div class="step-desc">Single or bulk CSV import</div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-title">Audit & Export</div><div class="step-desc">Monitor audit logs & download reports</div></div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Trainer Features -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Trainer Module</span>
+        <h2 class="slide-title">Trainer Capabilities</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h3 class="card-title">Daily Attendance</h3><p class="card-desc">Mark & edit attendance records with batch summaries.</p></div>
+        <div class="card"><h3 class="card-title">AI Content Generation</h3><p class="card-desc">Instantly generate quizzes, assignments, and coding tests with AI.</p></div>
+        <div class="card"><h3 class="card-title">Rubric Evaluations</h3><p class="card-desc">Evaluate students against custom technical & soft skill rubrics.</p></div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Trainer Workflow -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Trainer Module</span>
+        <h2 class="slide-title">Trainer Teaching & Evaluation Flow</h2>
+      </div>
+      <div class="stepper">
+        <div class="step-item"><div class="step-num">1</div><div class="step-title">View Batches</div><div class="step-desc">Access assigned cohorts</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-title">Mark Attendance</div><div class="step-desc">Update daily attendance</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-title">Publish Content</div><div class="step-desc">Share materials & AI quizzes</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-title">Grade Submissions</div><div class="step-desc">Review & give student feedback</div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-title">Submit Rubric</div><div class="step-desc">Score student evaluations</div></div>
+      </div>
+    </div>
+
+    <!-- Slide 11: Student Features & Flow -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Student Module</span>
+        <h2 class="slide-title">Student Learning Journey</h2>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3 class="card-title">Learning & Practice</h3>
+          <p class="card-desc">Access study materials, submit assignments, attempt MCQ quizzes with violation tracking, and write code in live programming tests.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Placement Readiness</h3>
+          <p class="card-desc">Upload resume for AI score breakdown, review trainer evaluation feedback, browse campus drives, and track job application stages.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: HR Features -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">HR Module</span>
+        <h2 class="slide-title">HR & Recruitment Capabilities</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h3 class="card-title">Company Profiles</h3><p class="card-desc">Onboard hiring partner companies with logo & profile info.</p></div>
+        <div class="card"><h3 class="card-title">Placement Drives</h3><p class="card-desc">Float campus drives with eligibility filters & brochure PDFs.</p></div>
+        <div class="card"><h3 class="card-title">Interview Pipeline</h3><p class="card-desc">Schedule, reschedule, shortlist, select, or reject candidates.</p></div>
+      </div>
+    </div>
+
+    <!-- Slide 13: HR Placement Pipeline Diagram -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">HR Module</span>
+        <h2 class="slide-title">End-to-End Recruitment Pipeline Flow</h2>
+      </div>
+      <div class="mermaid-container">
+        <div class="mermaid">
+          graph LR
+            A[Publish Drive] --> B[Student Applies]
+            B --> C[HR Shortlists]
+            C --> D[Schedule Interviews]
+            D --> E{Result}
+            E -->|Selected| F[Selected Candidate]
+            E -->|Not Selected| G[Rejected Candidate]
+            style A fill:#222232,stroke:#E81838,color:#fff
+            style B fill:#222232,stroke:#E81838,color:#fff
+            style C fill:#222232,stroke:#E81838,color:#fff
+            style D fill:#222232,stroke:#E81838,color:#fff
+            style F fill:#E81838,color:#fff
+            style G fill:#555,color:#fff
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 14: Cross-Cutting & AI Features -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Platform Innovations</span>
+        <h2 class="slide-title">AI & Cross-Cutting Engine</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card card-accent-top">
+          <div class="card-icon">🤖</div>
+          <h3 class="card-title">AI Assistant Engine</h3>
+          <p class="card-desc">Automated AI question generation for MCQ quizzes & coding tests; AI resume rating & feedback.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">🔔</div>
+          <h3 class="card-title">Notification Service</h3>
+          <p class="card-desc">Real-time in-app notification dropdown with unread chips and instant item dismiss buttons.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">📄</div>
+          <h3 class="card-title">Export & Analytics</h3>
+          <p class="card-desc">Institute-wide data exports in Excel/PDF format and live interactive Recharts dashboards.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 15: Limitations -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Project Analysis</span>
+        <h2 class="slide-title">Current System Limitations</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon">⚠️</div>
+          <h3 class="card-title">Single Tenant Setup</h3>
+          <p class="card-desc">Configured for single institute deployments; multi-tenancy support requires organization ID scoping.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚠️</div>
+          <h3 class="card-title">Offline Compiler Limits</h3>
+          <p class="card-desc">Live coding assessments evaluate code via backend API rather than a dedicated isolated sandbox sandbox.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚠️</div>
+          <h3 class="card-title">Email Dispatch Service</h3>
+          <p class="card-desc">OTP codes are logged & transmitted in-app; external SMTP mail server integration is optional.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 16: Future Scope -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Roadmap</span>
+        <h2 class="slide-title">Future Scope & Enhancements</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card card-accent-top">
+          <div class="card-icon">🚀</div>
+          <h3 class="card-title">Mobile Apps (React Native)</h3>
+          <p class="card-desc">Dedicated iOS and Android mobile apps for instant push notifications and attendance scanning.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">🚀</div>
+          <h3 class="card-title">AI Video Mock Interviews</h3>
+          <p class="card-desc">Automated AI video interview practice with facial expression & speech fluency analysis.</p>
+        </div>
+        <div class="card card-accent-top">
+          <div class="card-icon">🚀</div>
+          <h3 class="card-title">WhatsApp Integration</h3>
+          <p class="card-desc">Direct WhatsApp alerts for upcoming interview schedules, batch announcements, and drive invites.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 17: Conclusion -->
+    <div class="slide">
+      <div class="slide-header">
+        <span class="category-tag">Summary</span>
+        <h2 class="slide-title">Conclusion</h2>
+      </div>
+      <div class="card card-accent-top" style="max-width: 800px; margin: 0 auto; text-align: center; padding: 40px;">
+        <h3 class="card-title" style="font-size: 1.5rem; margin-bottom: 16px;">Transforming Training to Placement</h3>
+        <p class="card-desc" style="font-size: 1.05rem; line-height: 1.7;">
+          IBNextStep successfully unifies students, trainers, administrators, and HR recruiters into a single cohesive platform. 
+          By replacing manual tracking with structured workflows, AI-assisted content, and live placement pipelines, 
+          the platform accelerates student transformation from first class to final offer letter.
+        </p>
+      </div>
+    </div>
+
+    <!-- Slide 18: Thank You -->
+    <div class="slide hero-slide" style="align-items: center; text-align: center; padding-left: 0;">
+      <span class="category-tag">End of Presentation</span>
+      <h1 class="hero-title" style="font-size: 4rem;">Thank You <span>!</span></h1>
+      <p class="hero-subtitle" style="text-align: center; max-width: 500px;">
+        IBNextStep — Empowering Training-to-Placement Journeys.
+      </p>
+      <div style="margin-top: 20px;">
+        <span class="pill pill-red glow-pulse" style="font-size: 1rem; padding: 10px 24px;">Questions & Discussion</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  const progressBar = document.getElementById('progressBar');
+  const counter = document.getElementById('counter');
+
+  function updateDeck() {
+    slides.forEach((slide, index) => {
+      if (index === currentSlide) {
+        slide.classList.add('active');
+      } else {
+        slide.classList.remove('active');
+      }
+    });
+
+    const progress = ((currentSlide + 1) / totalSlides) * 100;
+    progressBar.style.width = progress + '%';
+    counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+      currentSlide++;
+      updateDeck();
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlide > 0) {
+      currentSlide--;
+      updateDeck();
+    }
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'Space') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      prevSlide();
+    }
+  });
+
+  // Initialize Mermaid
+  mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  updateDeck();
+</script>
+</body>
+</html>

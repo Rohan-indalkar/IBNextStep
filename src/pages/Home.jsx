@@ -274,11 +274,162 @@ export default function Home() {
         </motion.div>
       </Container>
 
-      {/* Slim Single Line Footer */}
-      <Box component="footer" sx={{ borderTop: '1px solid rgba(40, 40, 56, 0.10)', py: 2, background: '#FFFFFF', textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-          © {new Date().getFullYear()} IBNextStep · InfoBeans Foundation. All rights reserved. "Creating WOW!"
-        </Typography>
+      {/* Premium Enterprise Footer */}
+      <Box
+        component="footer"
+        sx={{
+          background: '#181824',
+          color: '#FFFFFF',
+          pt: 6,
+          pb: 3,
+          mt: 8,
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Grid container spacing={4} sx={{ mb: 5 }}>
+            {/* Column 1: Brand & Slogan */}
+            <Grid item xs={12} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 2,
+                    bgcolor: '#E81838',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 900,
+                    fontSize: '1rem',
+                  }}
+                >
+                  »
+                </Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontFamily: "'Sora', sans-serif",
+                    fontWeight: 800,
+                    color: '#FFFFFF',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  IBNextStep
+                </Typography>
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{ color: '#A0A0B8', lineHeight: 1.6, fontSize: '0.875rem', mb: 2.5, maxWidth: 320 }}
+              >
+                From first class to offer letter — an end-to-end connected platform for InfoBeans Foundation training & placement excellence.
+              </Typography>
+              <Chip
+                icon={<StarsOutlined sx={{ '&&': { color: '#E81838', fontSize: 16 } }} />}
+                label="Creating WOW!"
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(232, 24, 56, 0.12)',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  border: '1px solid rgba(232, 24, 56, 0.3)',
+                }}
+              />
+            </Grid>
+
+            {/* Column 2: User Role Portals */}
+            <Grid item xs={6} sm={3} md={2.5}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
+              >
+                Portals
+              </Typography>
+              <Stack spacing={1.25}>
+                {['Admin Dashboard', 'Trainer Portal', 'Student Hub', 'HR & Recruiter Portal'].map((label, i) => (
+                  <Typography
+                    key={i}
+                    variant="body2"
+                    onClick={() => navigate('/auth/login')}
+                    sx={{
+                      color: '#A0A0B8',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      transition: 'color 0.2s',
+                      '&:hover': { color: '#E81838' },
+                    }}
+                  >
+                    {label}
+                  </Typography>
+                ))}
+              </Stack>
+            </Grid>
+
+            {/* Column 3: Platform Features */}
+            <Grid item xs={6} sm={3} md={3}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
+              >
+                Key Modules
+              </Typography>
+              <Stack spacing={1.25}>
+                {['Batch & Attendance Mgmt', 'AI Quizzes & Coding Tests', 'Rubric Student Evaluation', 'Placement Drive Pipeline'].map((label, i) => (
+                  <Typography
+                    key={i}
+                    variant="body2"
+                    sx={{ color: '#A0A0B8', fontSize: '0.85rem' }}
+                  >
+                    {label}
+                  </Typography>
+                ))}
+              </Stack>
+            </Grid>
+
+            {/* Column 4: Info & System Status */}
+            <Grid item xs={12} sm={6} md={2.5}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
+              >
+                Foundation
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#A0A0B8', fontSize: '0.85rem', lineHeight: 1.6, mb: 2 }}>
+                InfoBeans Foundation
+                <br />
+                Student Training & Placement System
+              </Typography>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.5, borderRadius: 10, bgcolor: 'rgba(30, 142, 62, 0.15)', border: '1px solid rgba(30, 142, 62, 0.3)' }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#1E8E3E' }} />
+                <Typography variant="caption" sx={{ color: '#81C784', fontWeight: 600, fontSize: '0.75rem' }}>
+                  All Systems Operational
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* Bottom Bar */}
+          <Box
+            sx={{
+              pt: 3,
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <Typography variant="caption" sx={{ color: '#A0A0B8', fontWeight: 500 }}>
+              © {new Date().getFullYear()} IBNextStep · InfoBeans Foundation. All rights reserved.
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#A0A0B8', fontWeight: 500 }}>
+              Empowering Trainees from Class to Career 🚀
+            </Typography>
+          </Box>
+        </Container>
       </Box>
     </Box>
   );
