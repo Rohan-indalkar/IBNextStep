@@ -105,15 +105,15 @@ export default function HrDashboard() {
                   <Typography variant="body2" color="text.secondary">No applications recorded yet.</Typography>
                 </Box>
               ) : (
-                <Box sx={{ height: 220, position: 'relative' }}>
+                <Box sx={{ height: 240, position: 'relative' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={getPipelineData()}
                         cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={80}
+                        cy="45%"
+                        innerRadius={50}
+                        outerRadius={75}
                         paddingAngle={4}
                         dataKey="value"
                       >

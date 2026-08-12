@@ -92,8 +92,8 @@ export default function AdminDashboard() {
                     data={roleData}
                     cx="50%"
                     cy="45%"
-                    innerRadius={60}
-                    outerRadius={95}
+                    innerRadius={55}
+                    outerRadius={80}
                     paddingAngle={3}
                     dataKey="value"
                     isAnimationActive={true}

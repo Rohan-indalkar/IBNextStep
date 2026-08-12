@@ -86,10 +86,10 @@ export default function StudentDashboard() {
                 Status distribution of your submitted applications
               </Typography>
               {pieData.length > 0 ? (
-                <Box sx={{ height: 220 }}>
+                <Box sx={{ height: 240 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={pieData} innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" isAnimationActive={true}>
+                      <Pie data={pieData} cx="50%" cy="42%" innerRadius={50} outerRadius={75} paddingAngle={4} dataKey="value" isAnimationActive={true}>
                         {pieData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                         ))}
