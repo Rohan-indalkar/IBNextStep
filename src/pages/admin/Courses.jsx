@@ -7,6 +7,10 @@ import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import StatusBadge from '../../components/StatusBadge';
+import ActionMenu from '../../components/ActionMenu';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
+import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import { ErrorState, EmptyState } from '../../components/States';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useToast } from '../../context/ToastContext';
@@ -191,28 +195,21 @@ export default function Courses() {
     { key: 'active', header: 'Status', render: (r) => <StatusBadge status={r.active ? 'ACTIVE' : 'INACTIVE'} /> },
     {
       key: 'actions',
-      header: 'Actions',
+      header: '',
       align: 'right',
       render: (r) => (
-        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-          <Button size="small" variant="outlined" color="primary" onClick={() => openEditCourse(r)} sx={{ py: 0.25, px: 1, minWidth: 'auto', fontSize: '0.75rem', fontWeight: 600 }}>
-            Edit
-          </Button>
-          <Button size="small" variant="outlined" color="inherit" onClick={() => openSkillsModal(r)} sx={{ py: 0.25, px: 1, minWidth: 'auto', fontSize: '0.75rem', fontWeight: 600 }}>
-            Skills
-          </Button>
-          {r.active && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              onClick={() => handleDeactivate(r)}
-              sx={{ py: 0.25, px: 1, minWidth: 'auto', fontSize: '0.75rem', fontWeight: 600 }}
-            >
-              Deactivate
-            </Button>
-          )}
-        </Box>
+        <ActionMenu
+          items={[
+            { label: 'Edit course', icon: <EditOutlinedIcon fontSize="small" />, onClick: () => openEditCourse(r) },
+            { label: 'Manage skills', icon: <PsychologyOutlinedIcon fontSize="small" />, onClick: () => openSkillsModal(r) },
+            r.active && {
+              label: 'Deactivate course',
+              icon: <BlockOutlinedIcon fontSize="small" />,
+              color: 'error',
+              onClick: () => handleDeactivate(r),
+            },
+          ]}
+        />
       ),
     },
   ];
