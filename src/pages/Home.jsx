@@ -281,15 +281,26 @@ export default function Home() {
           background: '#181824',
           color: '#FFFFFF',
           pt: 6,
-          pb: 3,
+          pb: 4,
           mt: 8,
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          width: '100%',
         }}
       >
-        <Container maxWidth="xl" sx={{ px: { xs: 3, md: 6 } }}>
-          <Grid container spacing={4} justifyContent="space-between" sx={{ mb: 5 }}>
+        <Container maxWidth="lg" sx={{ mx: 'auto' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: { xs: 4, md: 3 },
+              mb: 5,
+              width: '100%',
+            }}
+          >
             {/* Column 1: Brand & Slogan */}
-            <Grid item xs={12} md={3.5}>
+            <Box sx={{ flex: '1.2 1 0%', minWidth: { xs: '100%', md: 240 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
                 <Box
                   sx={{
@@ -321,9 +332,9 @@ export default function Home() {
               </Box>
               <Typography
                 variant="body2"
-                sx={{ color: '#A0A0B8', lineHeight: 1.6, fontSize: '0.875rem', mb: 2.5, maxWidth: 360 }}
+                sx={{ color: '#A0A0B8', lineHeight: 1.6, fontSize: '0.875rem', mb: 2.5, maxWidth: 300 }}
               >
-                From first class to offer letter — an end-to-end connected platform for InfoBeans Foundation training & placement excellence.
+                From first class to offer letter — an end-to-end connected platform for InfoBeans Foundation training & placement.
               </Typography>
               <Chip
                 icon={<StarsOutlined sx={{ '&&': { color: '#E81838', fontSize: 16 } }} />}
@@ -337,10 +348,10 @@ export default function Home() {
                   border: '1px solid rgba(232, 24, 56, 0.3)',
                 }}
               />
-            </Grid>
+            </Box>
 
             {/* Column 2: User Role Portals */}
-            <Grid item xs={6} sm={3} md={2.5}>
+            <Box sx={{ flex: '0.8 1 0%', minWidth: { xs: '100%', sm: 160 } }}>
               <Typography
                 variant="subtitle2"
                 sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
@@ -365,10 +376,10 @@ export default function Home() {
                   </Typography>
                 ))}
               </Stack>
-            </Grid>
+            </Box>
 
             {/* Column 3: Platform Features */}
-            <Grid item xs={6} sm={3} md={3}>
+            <Box sx={{ flex: '1 1 0%', minWidth: { xs: '100%', sm: 180 } }}>
               <Typography
                 variant="subtitle2"
                 sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
@@ -386,10 +397,10 @@ export default function Home() {
                   </Typography>
                 ))}
               </Stack>
-            </Grid>
+            </Box>
 
             {/* Column 4: Info & System Status */}
-            <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ flex: '1 1 0%', minWidth: { xs: '100%', sm: 200 } }}>
               <Typography
                 variant="subtitle2"
                 sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
@@ -407,8 +418,8 @@ export default function Home() {
                   All Systems Operational
                 </Typography>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Bottom Bar */}
           <Box
