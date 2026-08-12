@@ -19,6 +19,12 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import StatusBadge from '../../components/StatusBadge';
 import PageHeader from '../../components/PageHeader';
+import ActionMenu from '../../components/ActionMenu';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import PublishOutlinedIcon from '@mui/icons-material/PublishOutlined';
+import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import useMyBatches from '../../hooks/useMyBatches';
 import { searchTrainerCourses } from '../../api/course';
 import {
@@ -257,7 +263,7 @@ export default function Assignments() {
       render: (r) => (
         <ActionMenu
           items={[
-            { label: 'View submissions', icon: <AssignmentTurnedInOutlinedIcon fontSize="small" />, onClick: () => openSubmissions(r) },
+            { label: 'View submissions', icon: <AssignmentTurnedInIcon fontSize="small" />, onClick: () => openSubmissions(r) },
             r.status === 'DRAFT' && { label: 'Publish assignment', icon: <PublishOutlinedIcon fontSize="small" />, color: 'primary', disabled: busyId === r.id, onClick: () => handleAction(r, 'publish') },
             r.status === 'DRAFT' && { label: 'Schedule assignment', icon: <EventOutlinedIcon fontSize="small" />, disabled: busyId === r.id, onClick: () => handleSchedule(r) },
             r.status === 'PUBLISHED' && { label: 'Close assignment', icon: <LockOutlinedIcon fontSize="small" />, disabled: busyId === r.id, onClick: () => handleAction(r, 'close') },
