@@ -286,10 +286,10 @@ export default function Home() {
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        <Container maxWidth="lg">
-          <Grid container spacing={4} sx={{ mb: 5 }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 3, md: 6 } }}>
+          <Grid container spacing={4} justifyContent="space-between" sx={{ mb: 5 }}>
             {/* Column 1: Brand & Slogan */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3.5}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
                 <Box
                   sx={{
@@ -321,7 +321,7 @@ export default function Home() {
               </Box>
               <Typography
                 variant="body2"
-                sx={{ color: '#A0A0B8', lineHeight: 1.6, fontSize: '0.875rem', mb: 2.5, maxWidth: 320 }}
+                sx={{ color: '#A0A0B8', lineHeight: 1.6, fontSize: '0.875rem', mb: 2.5, maxWidth: 360 }}
               >
                 From first class to offer letter — an end-to-end connected platform for InfoBeans Foundation training & placement excellence.
               </Typography>
@@ -389,7 +389,7 @@ export default function Home() {
             </Grid>
 
             {/* Column 4: Info & System Status */}
-            <Grid item xs={12} sm={6} md={2.5}>
+            <Grid item xs={12} sm={6} md={3}>
               <Typography
                 variant="subtitle2"
                 sx={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, mb: 2, color: '#FFFFFF', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.8rem' }}
