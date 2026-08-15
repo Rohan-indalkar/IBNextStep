@@ -99,30 +99,30 @@ export default function DataTable({ columns, rows, loading, emptyLabel = 'No rec
 
           {/* Mobile: stacked cards */}
           <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2, p: 2 }}>
-            {rows.map((row, i) => (
-              <Card key={row.id ?? i} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                {columns
-                  .filter((col) => col.header)
-                  .map((col) => (
-                    <Box key={col.key} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: '1px border-dotted var(--color-border)' }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.78rem' }}>
-                        {col.header}
-                      </Typography>
-                      <Box sx={{ textAlign: 'right', fontSize: '0.875rem' }}>
-                        {col.render ? col.render(row) : row[col.key]}
+            {rows.map((row, i) => {
+              const actionsCol = columns.find((col) => col.key === 'actions' || (!col.header && col.render));
+              return (
+                <Card key={row.id ?? i} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  {columns
+                    .filter((col) => col.header && col.key !== 'actions')
+                    .map((col) => (
+                      <Box key={col.key} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: '1px border-dotted var(--color-border)' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.78rem' }}>
+                          {col.header}
+                        </Typography>
+                        <Box sx={{ textAlign: 'right', fontSize: '0.875rem' }}>
+                          {col.render ? col.render(row) : row[col.key]}
+                        </Box>
                       </Box>
+                    ))}
+                  {actionsCol?.render && (
+                    <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                      {actionsCol.render(row)}
                     </Box>
-                  ))}
-                {columns.find((col) => !col.header || col.key === 'actions') && (
-                  <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    {(() => {
-                      const actionsCol = columns.find((col) => !col.header || col.key === 'actions');
-                      return actionsCol?.render ? actionsCol.render(row) : null;
-                    })()}
-                  </Box>
-                )}
-              </Card>
-            ))}
+                  )}
+                </Card>
+              );
+            })}
           </Box>
         </>
       )}

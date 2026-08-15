@@ -11,6 +11,9 @@ import { ErrorState } from '../../components/States';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useToast } from '../../context/ToastContext';
 import useDebouncedValue from '../../hooks/useDebouncedValue';
+import ActionMenu from '../../components/ActionMenu';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import {
   searchDepartments,
   createDepartment,
@@ -123,21 +126,21 @@ export default function Departments() {
       header: 'Actions',
       align: 'right',
       render: (r) => (
-        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-          <Button size="small" variant="outlined" color="primary" onClick={() => openEdit(r)} sx={{ py: 0.25, px: 1, minWidth: 'auto', fontSize: '0.75rem', fontWeight: 600 }}>
-            Edit
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            color="error"
-            disabled={deletingId === r.id}
-            onClick={() => handleDelete(r)}
-            sx={{ py: 0.25, px: 1, minWidth: 'auto', fontSize: '0.75rem', fontWeight: 600 }}
-          >
-            {deletingId === r.id ? 'Deleting…' : 'Delete'}
-          </Button>
-        </Box>
+        <ActionMenu
+          items={[
+            {
+              label: 'Edit',
+              icon: <EditOutlinedIcon fontSize="small" />,
+              onClick: () => openEdit(r),
+            },
+            {
+              label: 'Delete',
+              icon: <DeleteOutlinedIcon fontSize="small" />,
+              color: 'error.main',
+              onClick: () => handleDelete(r),
+            },
+          ]}
+        />
       ),
     },
   ];
