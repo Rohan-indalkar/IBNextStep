@@ -30,11 +30,17 @@ public class EmailService {
     public void send(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+
+            message.setFrom("indalkarrohan466@gmail.com");
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
+
             mailSender.send(message);
-        }  catch (MailException e) {
+
+            log.info("Email sent successfully to {}", to);
+
+        } catch (MailException e) {
             log.error("Mail sending failed", e);
 
             log.warn("=================================================================");
