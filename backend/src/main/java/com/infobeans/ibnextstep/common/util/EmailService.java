@@ -31,7 +31,7 @@ public class EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
 
-            message.setFrom("indalkarrohan466@gmail.com");
+            message.setFrom("rohanindalkar865@gmail.com");
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
@@ -43,12 +43,12 @@ public class EmailService {
         } catch (MailException e) {
             log.error("Mail sending failed", e);
 
-            log.warn("=================================================================");
+            log.warn("=================================================");
             log.warn("EMAIL NOT SENT");
             log.warn("To: {}", to);
             log.warn("Subject: {}", subject);
             log.warn("Body:\n{}", body);
-            log.warn("=================================================================");
+            log.warn("=================================================");
         }
     }
 
